@@ -5,6 +5,9 @@
     "ServerScriptService": {
       "FrogGameEnvironmentV13_CompleteReference": {
         "$path": "src/ServerScriptService/FrogGameEnvironmentV13_CompleteReference.server.lua"
+      },
+      "FrogGameEnvironmentV14_Fix": {
+        "$path": "src/ServerScriptService/FrogGameEnvironmentV14_Fix.server.lua"
       }
     }
   }
