@@ -10,7 +10,6 @@ local function isInFrogGame(instance)
     return instance:FindFirstAncestor("FrogGame") ~= nil
 end
 
--- Remove legacy objects that caused the original giant yellow floor.
 for _, child in ipairs(Workspace:GetChildren()) do
     if not isInFrogGame(child) then
         if child:IsA("BasePart") and (child.Name == "Baseplate" or child.Size.X > 1800 or child.Size.Z > 1800) then
@@ -61,9 +60,6 @@ for _, player in ipairs(Players:GetPlayers()) do
 end
 Players.PlayerAdded:Connect(setupPlayer)
 
--- The original V13 island was built with its top around Y=55-60 while
--- the pond surface is Y=0.  Lower the island by 40 studs so the land
--- meets the water naturally instead of appearing to float above it.
 local function lowerParts(container, amount)
     for _, obj in ipairs(container:GetDescendants()) do
         if obj:IsA("BasePart") then
@@ -89,16 +85,15 @@ local function alignMapToWater()
     local island = map:FindFirstChild("CentralIsland")
     if island then
         lowerParts(island, 40)
-        -- Shore rocks were centered at Y=16 in V13; bring them back to
-        -- the shoreline after lowering the rest of the island.
         raiseNamed(island, "IslandShoreRock", 26)
     end
 
-    -- V15 beauty objects are generated separately.  Lower only the
-    -- island-centered decorations; floating lotus and pond-edge objects
-    -- stay at the water level.
     local beauty = map:FindFirstChild("BeautyDecor")
     local generated = beauty and beauty:FindFirstChild("V15Generated")
+    if not generated and beauty then
+        generated = beauty:WaitForChild("V15Generated", 20)
+    end
+
     if generated then
         for _, obj in ipairs(generated:GetDescendants()) do
             if obj:IsA("BasePart") then
@@ -118,9 +113,14 @@ local function alignMapToWater()
     print("FrogGame V16 alignment: island lowered to meet pond water surface")
 end
 
--- V13 must finish first, and V15 beauty objects must exist before their
--- island decorations can be aligned.
-task.delay(5, alignMapToWater)
+task.spawn(function()
+    local frogGame = Workspace:WaitForChild("FrogGame", 20)
+    if frogGame then
+        frogGame:WaitForChild("ReferenceLayoutV13", 20)
+        task.wait(1)
+        alignMapToWater()
+    end
+end)
 
 task.delay(1, function()
     for _, player in ipairs(Players:GetPlayers()) do
