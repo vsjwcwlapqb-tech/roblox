@@ -4,8 +4,8 @@
     "$className": "DataModel",
     "ServerScriptService": {
       "$className": "ServerScriptService",
-      "FrogGameEnvironmentV10_OuterPath_Expanded": {
-        "$path": "src/ServerScriptService/FrogGameEnvironmentV10_OuterPath_Expanded.server.lua"
+      "FrogGameEnvironmentV11_Foundation": {
+        "$path": "src/ServerScriptService/FrogGameEnvironmentV11_Foundation.server.lua"
       }
     }
   }
