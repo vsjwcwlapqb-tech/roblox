@@ -1,6 +1,7 @@
--- Frog Game Environment V14/V16 vertical alignment repair
--- Removes legacy yellow baseplate/spawns, keeps real pond water,
--- and lowers the island/decorations so they sit naturally at the waterline.
+-- Frog Game Environment V18
+-- WATER / FLOOR / VERTICAL ALIGNMENT REPAIR
+-- Removes legacy yellow floor even when nested in a model, keeps the real
+-- terrain pond blue, and aligns V15/V17 scenery with the lowered island.
 
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
@@ -10,30 +11,40 @@ local function isInFrogGame(instance)
     return instance:FindFirstAncestor("FrogGame") ~= nil
 end
 
-for _, child in ipairs(Workspace:GetChildren()) do
-    if not isInFrogGame(child) then
-        if child:IsA("BasePart") and (child.Name == "Baseplate" or child.Size.X > 1800 or child.Size.Z > 1800) then
-            child:Destroy()
-        elseif child:IsA("SpawnLocation") then
-            child:Destroy()
+-- Remove legacy map floors/spawns recursively. The previous repair only checked
+-- direct Workspace children, so a yellow floor inside a Model could survive.
+local function removeLegacyGeometry()
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if not isInFrogGame(obj) then
+            if obj:IsA("SpawnLocation") then
+                obj:Destroy()
+            elseif obj:IsA("BasePart") then
+                local n = string.lower(obj.Name)
+                if n == "baseplate" or n == "base" or n == "ground" or n == "floor"
+                    or obj.Size.X > 1800 or obj.Size.Z > 1800 then
+                    obj:Destroy()
+                end
+            end
         end
     end
 end
 
+removeLegacyGeometry()
+
 if Terrain then
-    Terrain.WaterColor = Color3.fromRGB(35, 155, 194)
-    Terrain.WaterTransparency = 0.25
-    Terrain.WaterReflectance = 0.05
-    Terrain.WaterWaveSize = 0.15
+    Terrain.WaterColor = Color3.fromRGB(24, 125, 170)
+    Terrain.WaterTransparency = 0.18
+    Terrain.WaterReflectance = 0.08
+    Terrain.WaterWaveSize = 0.22
     Terrain.WaterWaveSpeed = 8
 end
 
 local function getLobbySpawn()
-    local frogGame = Workspace:WaitForChild("FrogGame", 15)
+    local frogGame = Workspace:WaitForChild("FrogGame", 20)
     if not frogGame then return nil end
-    local map = frogGame:WaitForChild("ReferenceLayoutV13", 15)
+    local map = frogGame:WaitForChild("ReferenceLayoutV13", 20)
     if not map then return nil end
-    local lobby = map:WaitForChild("Lobby", 15)
+    local lobby = map:WaitForChild("Lobby", 20)
     if not lobby then return nil end
     return lobby:FindFirstChild("Spawn_1")
 end
@@ -76,49 +87,79 @@ local function raiseNamed(container, name, amount)
     end
 end
 
+local function lowerCentralBeauty(generated, amount)
+    if not generated then return end
+    for _, obj in ipairs(generated:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            local p = obj.Position
+            local radial = math.sqrt(p.X*p.X + p.Z*p.Z)
+            local waterObject = obj.Name == "FloatingLotus"
+                or obj.Name == "FloatingPetal"
+                or obj.Name == "ExtraLilyPad"
+                or obj.Name == "LilyFlower"
+                or obj.Name == "WaterEdgeRock"
+                or obj.Name == "KoiBody"
+                or obj.Name == "KoiHead"
+                or obj.Name == "KoiTail"
+                or obj.Name == "CattailLeaf"
+                or obj.Name == "CattailHead"
+            if radial <= 1100 and not waterObject then
+                obj.CFrame = obj.CFrame + Vector3.new(0, -amount, 0)
+            end
+        end
+    end
+end
+
 local function alignMapToWater()
     local frogGame = Workspace:FindFirstChild("FrogGame")
     if not frogGame then return end
     local map = frogGame:FindFirstChild("ReferenceLayoutV13")
-    if not map or map:GetAttribute("VerticalAlignmentV16") then return end
+    if not map or map:GetAttribute("VerticalAlignmentV18") then return end
 
     local island = map:FindFirstChild("CentralIsland")
     if island then
         lowerParts(island, 40)
+        -- Shore rocks were originally centered below the island surface.
         raiseNamed(island, "IslandShoreRock", 26)
     end
 
     local beauty = map:FindFirstChild("BeautyDecor")
-    local generated = beauty and beauty:FindFirstChild("V15Generated")
-    if not generated and beauty then
-        generated = beauty:WaitForChild("V15Generated", 20)
+    if beauty then
+        local v15 = beauty:FindFirstChild("V15Generated")
+        if not v15 then v15 = beauty:WaitForChild("V15Generated", 20) end
+        lowerCentralBeauty(v15, 45)
+
+        local v17 = beauty:FindFirstChild("V17Generated")
+        if not v17 then v17 = beauty:WaitForChild("V17Generated", 20) end
+        lowerCentralBeauty(v17, 45)
     end
 
-    if generated then
-        for _, obj in ipairs(generated:GetDescendants()) do
-            if obj:IsA("BasePart") then
-                local p = obj.Position
-                local radial = math.sqrt(p.X*p.X + p.Z*p.Z)
-                local keepAtWater = obj.Name == "FloatingLotus" or obj.Name == "FloatingPetal" or obj.Name == "WaterEdgeRock"
-                if radial <= 1100 and not keepAtWater then
-                    obj.CFrame = obj.CFrame + Vector3.new(0, -45, 0)
-                end
-            end
-        end
-    end
-
-    map:SetAttribute("VerticalAlignmentV16", true)
+    map:SetAttribute("VerticalAlignmentV18", true)
     map:SetAttribute("WaterSurfaceY", 0)
     map:SetAttribute("IslandVerticalOffset", -40)
-    print("FrogGame V16 alignment: island lowered to meet pond water surface")
+    map:SetAttribute("LegacyFloorRemovedV18", true)
+    print("FrogGame V18 repair: yellow floor removed, water restored, decorations aligned")
 end
 
 task.spawn(function()
-    local frogGame = Workspace:WaitForChild("FrogGame", 20)
+    local frogGame = Workspace:WaitForChild("FrogGame", 30)
     if frogGame then
-        frogGame:WaitForChild("ReferenceLayoutV13", 20)
-        task.wait(1)
+        frogGame:WaitForChild("ReferenceLayoutV13", 30)
+        task.wait(2)
         alignMapToWater()
+    end
+end)
+
+-- V13/V15/V17 can finish at slightly different times under Rojo/Studio.
+-- Re-check briefly so late-created scenery cannot remain floating.
+task.delay(5, function()
+    alignMapToWater()
+end)
+
+task.spawn(function()
+    for _ = 1, 12 do
+        task.wait(1)
+        removeLegacyGeometry()
     end
 end)
 
@@ -130,4 +171,4 @@ task.delay(1, function()
     end
 end)
 
-print("FrogGame V16 repair loaded: water/map vertical alignment enabled")
+print("FrogGame V18 repair loaded")
