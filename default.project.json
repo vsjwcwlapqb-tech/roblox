@@ -1,1 +1,24 @@
-
+{
+  "name": "FrogGame",
+  "tree": {
+    "$className": "DataModel",
+    "Workspace": {
+      "$className": "Workspace",
+      "FrogGame": {
+        "$path": "src/Workspace/FrogGame"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "FrogGameServer": {
+        "$path": "src/ServerScriptService/FrogGameServer.server.lua"
+      }
+    },
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "FrogGameShared": {
+        "$path": "src/ReplicatedStorage/FrogGameShared"
+      }
+    }
+  }
+}
