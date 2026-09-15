@@ -3,9 +3,8 @@
   "tree": {
     "$className": "DataModel",
     "ServerScriptService": {
-      "$className": "ServerScriptService",
-      "FrogGameEnvironmentV12_PondLobby": {
-        "$path": "src/ServerScriptService/FrogGameEnvironmentV12_PondLobby.server.lua"
+      "FrogGameEnvironmentV13_CompleteReference": {
+        "$path": "src/ServerScriptService/FrogGameEnvironmentV13_CompleteReference.server.lua"
       }
     }
   }
