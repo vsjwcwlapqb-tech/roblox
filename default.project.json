@@ -11,6 +11,9 @@
       },
       "FrogGameEnvironmentV15_Beautification": {
         "$path": "src/ServerScriptService/FrogGameEnvironmentV15_Beautification.server.lua"
+      },
+      "FrogGameEnvironmentV17_DecorationExpansion": {
+        "$path": "src/ServerScriptService/FrogGameEnvironmentV17_DecorationExpansion.server.lua"
       }
     }
   }
