@@ -1,296 +1,254 @@
--- Frog Game — Pond + Frog Island v2
--- Rebuilt for a large, clearly visible pond, larger organic island,
--- non-overlapping surfaces, lotus flowers, lily pads and animated fish.
+-- Frog Game — Pond + Frog Island v3
+-- REAL Roblox Terrain Water for swimming. No blue pond floor Part.
 
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local RunService = game:GetService("RunService")
+local terrain = Workspace.Terrain
 
--- Clean previous generated map.
+terrain:Clear()
 local old = Workspace:FindFirstChild("FrogGame")
 if old then old:Destroy() end
-
--- Remove the default baseplate so it cannot z-fight with the generated terrain.
-local baseplate = Workspace:FindFirstChild("Baseplate")
-if baseplate and baseplate:IsA("BasePart") then
-	baseplate:Destroy()
-end
 
 local world = Instance.new("Folder")
 world.Name = "FrogGame"
 world.Parent = Workspace
-
 local map = Instance.new("Folder")
 map.Name = "PondAndIsland"
 map.Parent = world
-
-local function part(name, size, cf, material, color, parent, shape)
-	local p = Instance.new("Part")
-	p.Name = name
-	p.Size = size
-	p.CFrame = cf
-	p.Anchored = true
-	p.CanCollide = true
-	p.Material = material or Enum.Material.SmoothPlastic
-	p.Color = color or Color3.new(1,1,1)
-	p.TopSurface = Enum.SurfaceType.Smooth
-	p.BottomSurface = Enum.SurfaceType.Smooth
-	if shape then p.Shape = shape end
-	p.Parent = parent or map
-	return p
-end
-
-local function ball(name, size, pos, color, parent, material)
-	return part(name, size, CFrame.new(pos), material or Enum.Material.SmoothPlastic, color, parent, Enum.PartType.Ball)
-end
-
-local function cylinder(name, radius, height, pos, color, parent, material)
-	-- Roblox cylinders have their length along local X; rotate 90° around Z.
-	return part(name, Vector3.new(height, radius*2, radius*2), CFrame.new(pos) * CFrame.Angles(0,0,math.rad(90)), material or Enum.Material.Wood, color, parent, Enum.PartType.Cylinder)
-end
-
-local WATER = Color3.fromRGB(55, 166, 190)
-local WATER_DEEP = Color3.fromRGB(36, 126, 158)
-local GRASS = Color3.fromRGB(91, 164, 83)
-local GRASS_LIGHT = Color3.fromRGB(123, 190, 101)
-local DIRT = Color3.fromRGB(112, 78, 50)
-local SAND = Color3.fromRGB(226, 203, 145)
-local WOOD = Color3.fromRGB(91, 55, 38)
-local ROCK = Color3.fromRGB(112, 116, 108)
-local REED = Color3.fromRGB(67, 132, 73)
-local PETAL = Color3.fromRGB(255, 177, 210)
-local SAKURA = Color3.fromRGB(246, 143, 188)
-local LEAF = Color3.fromRGB(72, 143, 79)
-local LOTUS_WHITE = Color3.fromRGB(255, 226, 240)
-local LOTUS_PINK = Color3.fromRGB(255, 170, 207)
-local LOTUS_YELLOW = Color3.fromRGB(255, 218, 95)
-local FISH = Color3.fromRGB(246, 159, 74)
-local FISH_LIGHT = Color3.fromRGB(255, 205, 110)
-
--- =========================================================
--- LARGE WATER WORLD
--- =========================================================
--- The water is one clean, low plane. No second coplanar floor is used.
-part("PondBottom", Vector3.new(230, 8, 190), CFrame.new(0,-8,0), Enum.Material.Ground, DIRT)
-part("PondWater", Vector3.new(214, 2, 174), CFrame.new(0,-1,0), Enum.Material.Glass, WATER)
-
--- A darker underwater center gives depth without another visible surface.
-part("DeepPond", Vector3.new(190, 1, 150), CFrame.new(0,-2.15,0), Enum.Material.SmoothPlastic, WATER_DEEP)
-
--- Sandy shoreline ring.
-for i = 1, 48 do
-	local a = (i-1)/48 * math.pi*2
-	local rx = 103 + (i%3)*2
-	local rz = 83 + (i%4)*2
-	ball("ShoreSand", Vector3.new(7,2.5,7), Vector3.new(math.cos(a)*rx,0,math.sin(a)*rz), SAND)
-end
-
--- =========================================================
--- LARGE ORGANIC FROG ISLAND
--- =========================================================
 local island = Instance.new("Model")
 island.Name = "FrogIsland"
 island.Parent = map
 
--- Large rounded base rather than a small rectangular slab.
-ball("IslandCore", Vector3.new(118,12,94), Vector3.new(0,5,0), DIRT, island, Enum.Material.Ground)
-ball("IslandGrass", Vector3.new(108,8,84), Vector3.new(0,10,0), GRASS, island, Enum.Material.Grass)
+local GRASS = Color3.fromRGB(89,160,78)
+local GRASS2 = Color3.fromRGB(112,184,92)
+local DIRT = Color3.fromRGB(105,72,48)
+local SAND = Color3.fromRGB(226,205,151)
+local WOOD = Color3.fromRGB(91,53,35)
+local WOOD2 = Color3.fromRGB(126,77,46)
+local ROCK = Color3.fromRGB(119,121,113)
+local REED = Color3.fromRGB(60,133,72)
+local LEAF = Color3.fromRGB(65,139,73)
+local SAKURA = Color3.fromRGB(241,151,194)
+local SAKURA2 = Color3.fromRGB(255,188,218)
+local LOTUS_PINK = Color3.fromRGB(255,164,204)
+local LOTUS_WHITE = Color3.fromRGB(255,232,243)
+local LOTUS_YELLOW = Color3.fromRGB(255,218,89)
+local FISH = Color3.fromRGB(247,157,72)
+local FISH2 = Color3.fromRGB(255,205,111)
 
--- Extra grass lobes create an organic silhouette.
-local lobes = {
-	Vector3.new(-43,10,-18), Vector3.new(-25,10,-34), Vector3.new(0,10,-39),
-	Vector3.new(28,10,-32), Vector3.new(45,10,-15), Vector3.new(43,10,17),
-	Vector3.new(25,10,31), Vector3.new(0,10,38), Vector3.new(-28,10,32), Vector3.new(-45,10,16)
+local function P(name,size,cf,material,color,parent,shape,collide)
+	local p=Instance.new("Part")
+	p.Name=name p.Size=size p.CFrame=cf p.Anchored=true
+	p.CanCollide=collide~=false p.CanTouch=collide~=false p.CanQuery=collide~=false
+	p.Material=material or Enum.Material.SmoothPlastic p.Color=color or Color3.new(1,1,1)
+	p.TopSurface=Enum.SurfaceType.Smooth p.BottomSurface=Enum.SurfaceType.Smooth
+	if shape then p.Shape=shape end
+	p.Parent=parent or map
+	return p
+end
+
+local function ball(name,size,pos,color,parent,material,collide)
+	return P(name,size,CFrame.new(pos),material or Enum.Material.SmoothPlastic,color,parent,Enum.PartType.Ball,collide)
+end
+
+-- Cylinders are rotated because Roblox cylinder length is along local X.
+local function cyl(name,radius,height,pos,color,parent,material,collide)
+	return P(name,Vector3.new(height,radius*2,radius*2),CFrame.new(pos)*CFrame.Angles(0,0,math.rad(90)),material or Enum.Material.Wood,color,parent,Enum.PartType.Cylinder,collide)
+end
+
+-- ============================================================
+-- CLEAN LAND RING: pond remains completely open in the middle.
+-- ============================================================
+P("NorthLand",Vector3.new(260,4,48),CFrame.new(0,-2,-110),Enum.Material.Grass,GRASS)
+P("SouthLand",Vector3.new(260,4,48),CFrame.new(0,-2,110),Enum.Material.Grass,GRASS)
+P("WestLand",Vector3.new(48,4,172),CFrame.new(-128,-2,0),Enum.Material.Grass,GRASS)
+P("EastLand",Vector3.new(48,4,172),CFrame.new(128,-2,0),Enum.Material.Grass,GRASS)
+
+P("SouthBeach",Vector3.new(180,1,10),CFrame.new(0,0.5,88),Enum.Material.Sand,SAND)
+P("NorthBeach",Vector3.new(180,1,10),CFrame.new(0,0.5,-88),Enum.Material.Sand,SAND)
+P("WestBeach",Vector3.new(10,1,145),CFrame.new(-104,0.5,0),Enum.Material.Sand,SAND)
+P("EastBeach",Vector3.new(10,1,145),CFrame.new(104,0.5,0),Enum.Material.Sand,SAND)
+
+-- REAL SWIMMABLE WATER. Water surface is around Y=1 and has volume below it.
+terrain:FillBlock(CFrame.new(0,-3,0),Vector3.new(206,8,164),Enum.Material.Water)
+
+-- ============================================================
+-- LARGE ORGANIC ISLAND
+-- ============================================================
+ball("DirtMound",Vector3.new(130,18,106),Vector3.new(0,7,0),DIRT,island,Enum.Material.Ground)
+ball("GrassCap",Vector3.new(120,12,96),Vector3.new(0,12,0),GRASS,island,Enum.Material.Grass)
+
+local lobes={
+	Vector3.new(-43,12,-25),Vector3.new(-22,12,-43),Vector3.new(8,12,-43),
+	Vector3.new(36,12,-31),Vector3.new(48,12,-7),Vector3.new(45,12,20),
+	Vector3.new(23,12,39),Vector3.new(-7,12,43),Vector3.new(-35,12,32),Vector3.new(-49,12,7)
 }
 for i,pos in ipairs(lobes) do
-	ball("GrassLobe", Vector3.new(38,8,30), pos, GRASS_LIGHT, island, Enum.Material.Grass)
+	ball("GrassLobe_"..i,Vector3.new(42,9,31),pos,GRASS2,island,Enum.Material.Grass)
 end
 
--- Wide entrance from the mainland.
-part("IslandEntrance", Vector3.new(18,2,14), CFrame.new(0,14,48), Enum.Material.Sand, SAND, island)
-for i = 1, 11 do
-	local z = 45 - i*4
-	local x = (i%2==0 and -3 or 3)
-	ball("PathStone", Vector3.new(8,1.5,6), Vector3.new(x,15,z), ROCK, island)
+-- Central clear play area, intentionally flat and clean.
+P("FrogPlayArea",Vector3.new(52,1,36),CFrame.new(0,17,4),Enum.Material.Grass,GRASS,island)
+
+-- ============================================================
+-- BRIDGE / ENTRANCE
+-- ============================================================
+local bridge=Instance.new("Model") bridge.Name="IslandBridge" bridge.Parent=map
+for i=1,16 do
+	local z=84-i*4.2
+	local x=math.sin(i*0.7)*2
+	local s=ball("BridgeStone",Vector3.new(9,2,6),Vector3.new(x,1.7,z),ROCK,bridge,Enum.Material.Slate)
+	s.CFrame=CFrame.new(x,1.7,z)*CFrame.Angles(0,math.rad((i%3-1)*7),0)
 end
 
--- =========================================================
--- CENTRAL ISLAND POND / LOTUS GARDEN
--- =========================================================
--- Large recessed pond clearly visible in the center of the island.
-part("IslandPondBed", Vector3.new(48,2,34), CFrame.new(0,14,-3), Enum.Material.SmoothPlastic, WATER_DEEP, island)
-part("IslandPondWater", Vector3.new(45,1,31), CFrame.new(0,15,-3), Enum.Material.Glass, WATER, island)
-
-local function lilyPad(pos, scale)
-	local pad = cylinder("LilyPad", 2.8*scale, 0.35, pos, Color3.fromRGB(64,143,78), island, Enum.Material.Grass)
-	pad.Size = Vector3.new(0.35,5.6*scale,5.6*scale)
-	pad.CFrame = CFrame.new(pos) * CFrame.Angles(0,0,math.rad(90))
-	pad.CanCollide = false
-	return pad
+-- ============================================================
+-- FIXED SAKURA TREES
+-- ============================================================
+local function branchBetween(name,a,b,r,color,parent)
+	local d=b-a
+	local mid=(a+b)/2
+	local cf=CFrame.lookAt(mid,b)*CFrame.Angles(0,math.rad(90),0)
+	return P(name,Vector3.new(d.Magnitude,r*2,r*2),cf,Enum.Material.Wood,color,parent,Enum.PartType.Cylinder)
 end
 
-local function lotus(pos, scale)
-	local model = Instance.new("Model")
-	model.Name = "LotusFlower"
-	model.Parent = island
-	for i = 1, 8 do
-		local a = (i-1)/8*math.pi*2
-		local r = 1.35*scale
-		local petal = part("Petal", Vector3.new(2.8*scale,0.55*scale,1.35*scale), CFrame.new(pos + Vector3.new(math.cos(a)*r,0.65,math.sin(a)*r)) * CFrame.Angles(0,-a,math.rad(-16)), Enum.Material.SmoothPlastic, (i%2==0 and LOTUS_PINK or LOTUS_WHITE), model, Enum.PartType.Ball)
-		petal.CanCollide = false
+local function tree(name,base,scale)
+	local m=Instance.new("Model") m.Name=name m.Parent=island
+	local h=24*scale
+	cyl("Trunk",2*scale,h,base+Vector3.new(0,h/2,0),WOOD,m,Enum.Material.Wood)
+	local b=base+Vector3.new(0,h*0.58,0)
+	local ends={
+		b+Vector3.new(-9*scale,7*scale,-2*scale),
+		b+Vector3.new(9*scale,7.5*scale,2*scale),
+		b+Vector3.new(0,9*scale,8*scale),
+	}
+	for i,e in ipairs(ends) do
+		branchBetween("PrimaryBranch_"..i,b,e,0.82*scale,WOOD,m)
+		local e2=e+Vector3.new((i==2 and 4 or -4)*scale,4*scale,(i-2)*2*scale)
+		branchBetween("SecondaryBranch_"..i,e,e2,0.46*scale,WOOD2,m)
 	end
-	ball("Center", Vector3.new(1.7*scale,0.9*scale,1.7*scale), pos + Vector3.new(0,1.0,0), LOTUS_YELLOW, model)
-end
-
-for _,pos in ipairs({
-	Vector3.new(-14,16,-11), Vector3.new(13,16,-8), Vector3.new(-10,16,9),
-	Vector3.new(14,16,7), Vector3.new(0,16,-1)
-}) do
-	lilyPad(pos - Vector3.new(0,0.15,0), 0.9)
-end
-lotus(Vector3.new(-13,15.8,-8),1)
-lotus(Vector3.new(12,15.8,6),0.9)
-
--- =========================================================
--- FISH: visible animated swimming creatures
--- =========================================================
-local fishFolder = Instance.new("Folder")
-fishFolder.Name = "PondFish"
-fishFolder.Parent = world
-
-local fishData = {}
-local function makeFish(i, center, radius, phase)
-	local model = Instance.new("Model")
-	model.Name = "Fish_"..i
-	model.Parent = fishFolder
-
-	local body = ball("Body", Vector3.new(2.8,1.4,1.7), center, FISH, model)
-	local tail = part("Tail", Vector3.new(0.25,1.5,1.8), CFrame.new(center + Vector3.new(-1.6,0,0)), Enum.Material.SmoothPlastic, FISH_LIGHT, model, Enum.PartType.Wedge)
-	tail.CanCollide = false
-	body.CanCollide = false
-	local eye = ball("Eye", Vector3.new(0.22,0.22,0.22), center + Vector3.new(1.05,0.42,-0.58), Color3.new(0.05,0.05,0.05), model)
-	eye.CanCollide = false
-	fishData[#fishData+1] = {model=model, radius=radius, phase=phase, y=center.Y, cx=center.X, cz=center.Z, speed=0.35+((i%4)*0.06)}
-end
-
-for i = 1, 10 do
-	makeFish(i, Vector3.new(-65 + (i%5)*28, -0.1, -38 + math.floor(i/5)*35), 25+(i%3)*7, i*0.8)
-end
-
--- =========================================================
--- TREES + BUSHES
--- =========================================================
-local function tree(name, pos, scale)
-	local model = Instance.new("Model")
-	model.Name = name
-	model.Parent = island
-	local h = 20*scale
-	cylinder("Trunk", 1.8*scale, h, pos + Vector3.new(0,h/2,0), WOOD, model)
-	for k=1,5 do
-		local a=k/5*math.pi*2
-		local start=pos+Vector3.new(0,h*0.55,0)
-		local finish=start+Vector3.new(math.cos(a)*7*scale,4*scale,math.sin(a)*7*scale)
-		local mid=(start+finish)/2
-		local b=cylinder("Branch",0.65*scale,(finish-start).Magnitude,mid,WOOD,model)
-		b.CFrame=CFrame.lookAt(mid,finish)*CFrame.Angles(0,math.rad(90),0)
-	end
-	for j=1,11 do
-		local a=j/11*math.pi*2
-		local r=(4.0+(j%3)*1.3)*scale
-		ball("SakuraCrown",Vector3.new(r*2.1,r*1.35,r*2.1),pos+Vector3.new(math.cos(a)*r,h+5*scale+(j%2)*1.5,math.sin(a)*r),SAKURA,model)
+	local crowns={
+		ends[1]+Vector3.new(-1,4,0),ends[1]+Vector3.new(4,5,2),
+		ends[2]+Vector3.new(1,4,0),ends[2]+Vector3.new(-4,5,-2),
+		ends[3]+Vector3.new(0,4,1),base+Vector3.new(0,h+8*scale,0)
+	}
+	for i,c in ipairs(crowns) do
+		local s=(7+(i%3)*1.3)*scale
+		ball("SakuraCrown_"..i,Vector3.new(s*2,s*1.35,s*2),c,i%2==0 and SAKURA or SAKURA2,m,Enum.Material.SmoothPlastic,false)
 	end
 end
 
-tree("SakuraTree_Center",Vector3.new(0,14,-29),1.15)
-tree("SakuraTree_Left",Vector3.new(-38,14,-8),0.95)
-tree("SakuraTree_Right",Vector3.new(38,14,-7),0.95)
-tree("SakuraTree_BackLeft",Vector3.new(-31,14,27),0.82)
-tree("SakuraTree_BackRight",Vector3.new(31,14,27),0.82)
+tree("SakuraTree_Left",Vector3.new(-38,17,-15),1)
+tree("SakuraTree_Right",Vector3.new(38,17,-14),1)
+tree("SakuraTree_Back",Vector3.new(0,17,-34),1.08)
+tree("SakuraTree_BackLeft",Vector3.new(-27,17,28),0.78)
+tree("SakuraTree_BackRight",Vector3.new(28,17,28),0.78)
 
-local function bush(pos,s)
-	for i=1,6 do
-		local a=i/6*math.pi*2
-		ball("Bush",Vector3.new(7*s,5*s,7*s),pos+Vector3.new(math.cos(a)*2.7*s,2.5*s,math.sin(a)*2.7*s),LEAF)
+-- ============================================================
+-- ORGANIZED BUSHES + SHORE ROCKS
+-- ============================================================
+local decor=Instance.new("Folder") decor.Name="IslandDecor" decor.Parent=island
+local function bush(pos,scale)
+	local m=Instance.new("Model") m.Name="Bush" m.Parent=decor
+	for i=1,5 do
+		local a=(i-1)/5*math.pi*2
+		ball("Leaf",Vector3.new(7*scale,5.4*scale,7*scale),pos+Vector3.new(math.cos(a)*2.6*scale,2.7*scale,math.sin(a)*2.6*scale),LEAF,m,Enum.Material.Grass,false)
 	end
 end
-for _,p in ipairs({Vector3.new(-48,15,22),Vector3.new(48,15,22),Vector3.new(-49,15,-25),Vector3.new(49,15,-24),Vector3.new(0,15,35)}) do
-	bush(p,1)
+for _,p in ipairs({Vector3.new(-48,17,19),Vector3.new(48,17,19),Vector3.new(-48,17,-27),Vector3.new(48,17,-26),Vector3.new(0,17,40)}) do bush(p,1) end
+for i=1,24 do
+	local a=(i-1)/24*math.pi*2 local r=53+(i%3)*1.8
+	ball("IslandRock",Vector3.new(6+(i%2)*2,3.8,5+(i%3)),Vector3.new(math.cos(a)*r,16.5,math.sin(a)*r*0.78),ROCK,decor,Enum.Material.Slate,false)
 end
 
--- Rocks around island edges.
-for i=1,28 do
-	local a=(i-1)/28*math.pi*2
-	local r=51+(i%4)*2
-	ball("IslandRock",Vector3.new(5+(i%3),3.5,4+(i%2)),Vector3.new(math.cos(a)*r,15,math.sin(a)*r*0.75),ROCK,island)
+-- ============================================================
+-- LOTUS + LILY PADS ON REAL WATER
+-- ============================================================
+local pondDecor=Instance.new("Folder") pondDecor.Name="PondDecor" pondDecor.Parent=world
+local function lily(pos,scale)
+	local p=cyl("LilyPad",3.4*scale,0.25,pos,Color3.fromRGB(61,145,75),pondDecor,Enum.Material.Grass,false)
+	p.Size=Vector3.new(0.25,6.8*scale,6.8*scale)
+	p.CFrame=CFrame.new(pos)*CFrame.Angles(0,0,math.rad(90))
+end
+local function lotus(pos,scale)
+	local m=Instance.new("Model") m.Name="Lotus" m.Parent=pondDecor
+	for i=1,8 do
+		local a=(i-1)/8*math.pi*2 local r=1.8*scale
+		local p=ball("Petal",Vector3.new(3.4*scale,0.8*scale,1.8*scale),pos+Vector3.new(math.cos(a)*r,1.0,math.sin(a)*r),i%2==0 and LOTUS_PINK or LOTUS_WHITE,m,Enum.Material.SmoothPlastic,false)
+		p.CFrame=CFrame.new(p.Position)*CFrame.Angles(0,-a,math.rad(-18))
+	end
+	ball("GoldenCenter",Vector3.new(2*scale,1*scale,2*scale),pos+Vector3.new(0,1.4,0),LOTUS_YELLOW,m,Enum.Material.SmoothPlastic,false)
 end
 
--- Reeds sit around the OUTER pond, not on top of the island.
-for i=1,55 do
-	local a=(i-1)/55*math.pi*2
-	local rx=91+(i%5)*4
-	local rz=72+(i%4)*4
-	for j=1,2 do
-		local h=5+(j%3)*1.2
-		cylinder("Reed",0.2,h,Vector3.new(math.cos(a)*rx+(j-1)*0.8,0.8+h/2,math.sin(a)*rz+(j%2)*0.8),REED)
+local lotusSpots={
+	Vector3.new(-72,1.2,-43),Vector3.new(72,1.2,-34),Vector3.new(-78,1.2,25),
+	Vector3.new(77,1.2,37),Vector3.new(-30,1.2,65),Vector3.new(38,1.2,61)
+}
+for i,p in ipairs(lotusSpots) do lily(p,1.05) lotus(p,0.9+(i%2)*0.1) end
+for _,p in ipairs({Vector3.new(-57,1.15,-20),Vector3.new(55,1.15,-12),Vector3.new(-62,1.15,47),Vector3.new(65,1.15,52),Vector3.new(20,1.15,70),Vector3.new(-12,1.15,-65),Vector3.new(84,1.15,4),Vector3.new(-86,1.15,0)}) do lily(p,0.85) end
+
+-- Reeds form tidy shoreline clusters.
+for i=1,30 do
+	local a=(i-1)/30*math.pi*2
+	local x=math.cos(a)*94 local z=math.sin(a)*74
+	for j=1,3 do
+		local h=5+(j%3)
+		cyl("Reed",0.18,h,Vector3.new(x+(j-2)*0.8,1+h/2,z+(j%2)*0.6),REED,pondDecor,Enum.Material.Grass,false)
 	end
 end
 
--- =========================================================
--- PLAYER DISPLAY AREAS — OUTSIDE THE MAIN POND
--- =========================================================
-local stalls=Instance.new("Folder")
-stalls.Name="PlayerDisplayAreas"
-stalls.Parent=world
-for i=1,6 do
-	local a=(i-1)/6*math.pi*2
-	local pos=Vector3.new(math.cos(a)*116,4,math.sin(a)*94)
-	local stall=Instance.new("Model")
-	stall.Name="PlayerStall_"..i
-	stall.Parent=stalls
-	part("Platform",Vector3.new(22,2,16),CFrame.new(pos),Enum.Material.Wood,WOOD,stall)
-	part("BackWall",Vector3.new(22,10,1),CFrame.new(pos+Vector3.new(0,6,6.5)),Enum.Material.Wood,WOOD,stall)
-	part("Sign",Vector3.new(15,3,0.6),CFrame.new(pos+Vector3.new(0,11,5.8)),Enum.Material.SmoothPlastic,Color3.fromRGB(245,225,174),stall)
+-- ============================================================
+-- FISH IN THE WATER
+-- ============================================================
+local fishFolder=Instance.new("Folder") fishFolder.Name="PondFish" fishFolder.Parent=world
+local fishData={}
+local function fish(id,pos,radius,phase)
+	local m=Instance.new("Model") m.Name="Fish_"..id m.Parent=fishFolder
+	ball("Body",Vector3.new(3.5,1.6,2.1),pos,FISH,m,Enum.Material.SmoothPlastic,false)
+	P("Tail",Vector3.new(0.4,1.8,2.2),CFrame.new(pos+Vector3.new(-1.8,0,0)),Enum.Material.SmoothPlastic,FISH2,m,Enum.PartType.Wedge,false)
+	ball("Eye",Vector3.new(0.3,0.3,0.3),pos+Vector3.new(1.05,0.45,-0.75),Color3.new(0.03,0.03,0.03),m,Enum.Material.SmoothPlastic,false)
+	fishData[#fishData+1]={model=m,cx=pos.X,cz=pos.Z,y=pos.Y,r=radius,phase=phase,speed=0.3+(id%4)*0.05}
+end
+local fishSpots={
+	Vector3.new(-68,-1,-36),Vector3.new(-35,-1,-60),Vector3.new(30,-1,-58),Vector3.new(68,-1,-32),
+	Vector3.new(-74,-1,18),Vector3.new(76,-1,17),Vector3.new(-55,-1,55),Vector3.new(57,-1,57),
+	Vector3.new(-15,-1,72),Vector3.new(20,-1,70),Vector3.new(88,-1,0),Vector3.new(-88,-1,0)
+}
+for i,p in ipairs(fishSpots) do fish(i,p,8+(i%4)*3,i*0.7) end
+
+-- ============================================================
+-- OUTER PLAYER DISPLAY AREAS
+-- ============================================================
+local stalls=Instance.new("Folder") stalls.Name="PlayerDisplayAreas" stalls.Parent=world
+local stallSpots={Vector3.new(-72,1.5,106),Vector3.new(-25,1.5,106),Vector3.new(25,1.5,106),Vector3.new(72,1.5,106),Vector3.new(-108,1.5,70),Vector3.new(108,1.5,70)}
+for i,pos in ipairs(stallSpots) do
+	local m=Instance.new("Model") m.Name="PlayerStall_"..i m.Parent=stalls
+	P("Platform",Vector3.new(24,2,15),CFrame.new(pos),Enum.Material.Wood,WOOD,m)
+	P("BackWall",Vector3.new(24,9,1),CFrame.new(pos+Vector3.new(0,5,6.5)),Enum.Material.Wood,WOOD,m)
+	P("Sign",Vector3.new(16,3,0.6),CFrame.new(pos+Vector3.new(0,10,5.8)),Enum.Material.SmoothPlastic,SAND,m)
 	for slot=1,6 do
-		local x=((slot-1)%3-1)*6
-		local z=(math.floor((slot-1)/3)-0.5)*5
-		ball("DollDisplaySlot",Vector3.new(2.5,2.5,2.5),pos+Vector3.new(x,3,z),Color3.fromRGB(242,202,154),stall)
+		local x=((slot-1)%3-1)*6 local z=(math.floor((slot-1)/3)-0.5)*5
+		ball("DollSlot",Vector3.new(2.4,2.4,2.4),pos+Vector3.new(x,3,z),Color3.fromRGB(241,203,157),m,Enum.Material.SmoothPlastic,false)
 	end
 end
 
--- Decorative boat at the outer pond.
-local boat=Instance.new("Model")
-boat.Name="DecorativeSailboat"
-boat.Parent=map
-part("Hull",Vector3.new(18,3,7),CFrame.new(0,0,86),Enum.Material.Wood,WOOD,boat)
-part("Mast",Vector3.new(0.7,17,0.7),CFrame.new(0,8,86),Enum.Material.Wood,WOOD,boat)
-part("Sail",Vector3.new(0.4,9,8),CFrame.new(2.8,9,86),Enum.Material.Fabric,Color3.fromRGB(250,244,225),boat)
+-- Boat floating on real water.
+local boat=Instance.new("Model") boat.Name="DecorativeSailboat" boat.Parent=map
+P("Hull",Vector3.new(20,3,8),CFrame.new(-48,0.8,-72),Enum.Material.Wood,WOOD,boat)
+cyl("Mast",0.45,16,Vector3.new(-48,9,-72),WOOD,boat)
+P("Sail",Vector3.new(0.5,9,8),CFrame.new(-44.5,9,-72),Enum.Material.Fabric,Color3.fromRGB(250,245,226),boat)
 
--- Falling Sakura petals, fewer and slower to keep the scene readable.
-local petals=Instance.new("Folder")
-petals.Name="FallingSakuraPetals"
-petals.Parent=world
-for i=1,55 do
-	local p=part("Petal",Vector3.new(0.35,0.08,0.5),CFrame.new(math.random(-75,75),math.random(15,38),math.random(-60,60)),Enum.Material.SmoothPlastic,PETAL,petals)
-	p.CanCollide=false
-	p:SetAttribute("FallPhase",math.random()*10)
-end
-
--- =========================================================
+-- ============================================================
 -- GAMEPLAY REGIONS
--- =========================================================
-local regions=Instance.new("Folder")
-regions.Name="GameplayRegions"
-regions.Parent=world
-local spawn=part("FrogSpawnRegion",Vector3.new(48,0.5,34),CFrame.new(0,17,-3),Enum.Material.SmoothPlastic,Color3.fromRGB(80,180,100),regions)
-spawn.Transparency=1
-spawn.CanCollide=false
-local start=part("RaceStart",Vector3.new(20,0.5,6),CFrame.new(0,17,35),Enum.Material.SmoothPlastic,Color3.fromRGB(255,230,120),regions)
-start.Transparency=1
-start.CanCollide=false
-local entrance=part("IslandEntranceRegion",Vector3.new(18,0.5,14),CFrame.new(0,17,48),Enum.Material.SmoothPlastic,Color3.fromRGB(120,210,180),regions)
-entrrance=nil -- harmless compatibility cleanup; entrance is the actual region
-entrance.Transparency=1
-entrance.CanCollide=false
+-- ============================================================
+local regions=Instance.new("Folder") regions.Name="GameplayRegions" regions.Parent=world
+local function region(name,size,pos)
+	local p=P(name,size,CFrame.new(pos),Enum.Material.SmoothPlastic,Color3.new(1,1,1),regions,nil,false)
+	p.Transparency=1 return p
+end
+region("FrogSpawnRegion",Vector3.new(42,0.5,30),Vector3.new(0,18,4))
+region("RaceStart",Vector3.new(20,0.5,6),Vector3.new(0,18,42))
+region("IslandEntranceRegion",Vector3.new(18,0.5,8),Vector3.new(0,18,52))
 
 world:SetAttribute("MaxPlayers",6)
 world:SetAttribute("MaxFrogs",20)
@@ -298,51 +256,36 @@ world:SetAttribute("ActiveRoundSeconds",300)
 world:SetAttribute("ResetSeconds",10)
 world:SetAttribute("LegendaryTimerSeconds",1800)
 world:SetAttribute("SecretTimerSeconds",3600)
-world:SetAttribute("MapVersion","PondIsland_v2")
+world:SetAttribute("MapVersion","PondIsland_v3_Swimmable")
 
--- =========================================================
--- FISH + PETAL MOTION
--- =========================================================
+-- Sakura petals.
+local petals=Instance.new("Folder") petals.Name="FallingSakuraPetals" petals.Parent=world
+for i=1,45 do
+	local p=P("Petal",Vector3.new(0.35,0.08,0.5),CFrame.new(math.random(-70,70),math.random(18,42),math.random(-60,60)),Enum.Material.SmoothPlastic,SAKURA2,petals,nil,false)
+	p:SetAttribute("Phase",math.random()*12)
+end
+
 local t0=os.clock()
-local connection
-connection=RunService.Heartbeat:Connect(function()
-	if not world.Parent then
-		connection:Disconnect()
-		return
-	end
+RunService.Heartbeat:Connect(function()
 	local t=os.clock()-t0
 	for _,d in ipairs(fishData) do
 		local a=t*d.speed+d.phase
-		local x=d.cx+math.cos(a)*d.radius
-		local z=d.cz+math.sin(a)*d.radius*0.7
-		local y=d.y+math.sin(t*2+d.phase)*0.35
-		d.model:PivotTo(CFrame.new(x,y,z)*CFrame.Angles(0,-a,0))
+		d.model:PivotTo(CFrame.new(d.cx+math.cos(a)*d.r,d.y+math.sin(t*1.8+d.phase)*0.35,d.cz+math.sin(a)*d.r*0.72)*CFrame.Angles(0,-a,0))
 	end
 	for _,p in ipairs(petals:GetChildren()) do
-		if p:IsA("BasePart") then
-			local phase=p:GetAttribute("FallPhase") or 0
-			local startY=30+(phase%8)
-			local cycle=(t+phase)%12
-			p.Position=Vector3.new(p.Position.X+math.sin(t*0.7+phase)*0.01,p.Position.Y,p.Position.Z)
-			local y=startY-cycle*2.2
-			if y<7 then y=startY end
-			p.Position=Vector3.new(p.Position.X,y,p.Position.Z)
-			p.Orientation=Vector3.new((t*35+phase*10)%360,(t*20)%360,(t*45+phase*7)%360)
-		end
+		local phase=p:GetAttribute("Phase") or 0 local cycle=(t+phase)%14
+		local y=42-cycle*2.2 if y<5 then y=42 end
+		p.Position=Vector3.new(p.Position.X+math.sin(t*0.6+phase)*0.012,y,p.Position.Z)
+		p.Orientation=Vector3.new((t*28+phase*8)%360,(t*18)%360,(t*42+phase*6)%360)
 	end
 end)
 
-Lighting.ClockTime=16.5
+Lighting.ClockTime=16.2
 Lighting.Brightness=2.4
-Lighting.EnvironmentDiffuseScale=0.6
-Lighting.EnvironmentSpecularScale=0.4
-Lighting.OutdoorAmbient=Color3.fromRGB(165,175,165)
-
+Lighting.EnvironmentDiffuseScale=0.65
+Lighting.EnvironmentSpecularScale=0.35
+Lighting.OutdoorAmbient=Color3.fromRGB(165,175,170)
 local atmosphere=Lighting:FindFirstChildOfClass("Atmosphere") or Instance.new("Atmosphere")
-atmosphere.Density=0.22
-atmosphere.Offset=0.1
-atmosphere.Glare=0.08
-atmosphere.Haze=0.8
-atmosphere.Parent=Lighting
+atmosphere.Density=0.18 atmosphere.Offset=0.1 atmosphere.Haze=0.6 atmosphere.Glare=0.05 atmosphere.Parent=Lighting
 
-print("FrogGame: Pond + Frog Island v2 loaded — large island, visible pond, lotus and fish.")
+print("FrogGame v3: swimmable Terrain Water, large island, fixed Sakura trees, lotus and fish")
