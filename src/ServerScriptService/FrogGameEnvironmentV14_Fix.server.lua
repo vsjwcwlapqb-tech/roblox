@@ -33,18 +33,19 @@ if Terrain then
 end
 
 local function getLobbySpawn()
-    local frogGame = Workspace:FindFirstChild("FrogGame")
+    -- V13 may be starting at the same time as this repair script.
+    local frogGame = Workspace:WaitForChild("FrogGame", 15)
     if not frogGame then return nil end
-    local map = frogGame:FindFirstChild("ReferenceLayoutV13")
+    local map = frogGame:WaitForChild("ReferenceLayoutV13", 15)
     if not map then return nil end
-    local lobby = map:FindFirstChild("Lobby")
+    local lobby = map:WaitForChild("Lobby", 15)
     if not lobby then return nil end
     return lobby:FindFirstChild("Spawn_1")
 end
 
 local function placeCharacter(character)
     local spawn = getLobbySpawn()
-    local root = character and character:FindFirstChild("HumanoidRootPart")
+    local root = character and character:WaitForChild("HumanoidRootPart", 5)
     if spawn and root then
         root.CFrame = spawn.CFrame + Vector3.new(0, 5, 0)
     end
@@ -52,11 +53,10 @@ end
 
 local function setupPlayer(player)
     player.CharacterAdded:Connect(function(character)
-        task.wait(0.2)
-        placeCharacter(character)
+        task.spawn(placeCharacter, character)
     end)
     if player.Character then
-        task.defer(placeCharacter, player.Character)
+        task.spawn(placeCharacter, player.Character)
     end
 end
 
@@ -64,5 +64,13 @@ for _, player in ipairs(Players:GetPlayers()) do
     setupPlayer(player)
 end
 Players.PlayerAdded:Connect(setupPlayer)
+
+task.delay(1, function()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Character then
+            task.spawn(placeCharacter, player.Character)
+        end
+    end
+end)
 
 print("FrogGame V14 repair loaded: legacy yellow baseplate removed, pond water corrected, lobby spawn enforced")
