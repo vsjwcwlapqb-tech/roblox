@@ -1,0 +1,21 @@
+name: Package FrogGame project
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Create ZIP
+        run: zip -r FrogGame_CurrentProject.zip . -x '.git/*'
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FrogGame_CurrentProject
+          path: FrogGame_CurrentProject.zip
